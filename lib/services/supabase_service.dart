@@ -401,7 +401,8 @@ class SupabaseService {
 
   SupabaseService._();
 
-  // Compile-time fallbacks (populated when built with --dart-define)
+  // Build-time values populated with --dart-define.
+  // Vercel production builds must provide these instead of using env.json.
   static const String _envUrl = String.fromEnvironment(
     'SUPABASE_URL',
     defaultValue: '',
@@ -411,15 +412,15 @@ class SupabaseService {
     defaultValue: '',
   );
 
-  // Runtime-resolved values (populated from env.json on web)
+  // Runtime-resolved values. env.json is only a local/mobile fallback when
+  // build-time values were not provided.
   static String _resolvedUrl = _envUrl;
   static String _resolvedAnonKey = _envAnonKey;
 
   static bool _initialized = false;
 
-  /// Loads env.json from assets and extracts SUPABASE_URL / SUPABASE_ANON_KEY.
-  /// Falls back to dart-define values if the file is missing or keys are absent.
-  static Future<void> _loadEnvJson() async {
+  /// Loads env.json from assets when dart-define values were not provided.
+  static Future<void> _loadEnvJsonFallback() async {
     try {
       final raw = await rootBundle.loadString('env.json');
       final map = json.decode(raw) as Map<String, dynamic>;
@@ -427,10 +428,10 @@ class SupabaseService {
       final key = map['SUPABASE_ANON_KEY'] as String? ?? '';
       if (url.isNotEmpty) _resolvedUrl = url;
       if (key.isNotEmpty) _resolvedAnonKey = key;
-      debugPrint('[SupabaseService] Loaded credentials from env.json');
+      debugPrint('[SupabaseService] Loaded missing credentials from env.json');
     } catch (e) {
       debugPrint(
-        '[SupabaseService] env.json not loaded ($e), using dart-define values',
+        '[SupabaseService] env.json fallback not loaded ($e)',
       );
     }
   }
@@ -438,9 +439,9 @@ class SupabaseService {
   static Future<void> initialize() async {
     if (_initialized) return;
 
-    // Try to load from env.json first (runtime injection on web)
+    // Prefer build-time values; fall back to env.json only when they are absent.
     if (_resolvedUrl.isEmpty || _resolvedAnonKey.isEmpty) {
-      await _loadEnvJson();
+      await _loadEnvJsonFallback();
     }
 
     if (_resolvedUrl.isEmpty || _resolvedAnonKey.isEmpty) {

@@ -8,6 +8,7 @@ class AppBreakpoints {
   static const double desktop = 1200;
   static const double maxContent = 1180;
   static const double maxReading = 920;
+  static const double maxList = 980;
 
   const AppBreakpoints._();
 }
@@ -26,6 +27,32 @@ extension AdaptiveContext on BuildContext {
       return EdgeInsets.fromLTRB(24, 24, 24, bottom);
     }
     return EdgeInsets.fromLTRB(16, 16, 16, bottom);
+  }
+}
+
+class AdaptiveScaffoldBody extends StatelessWidget {
+  final Widget child;
+  final Widget? navigationRail;
+
+  const AdaptiveScaffoldBody({
+    super.key,
+    required this.child,
+    this.navigationRail,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (navigationRail == null || !context.isWide) {
+      return child;
+    }
+
+    return Row(
+      children: [
+        SafeArea(right: false, bottom: false, child: navigationRail!),
+        const VerticalDivider(width: 1),
+        Expanded(child: child),
+      ],
+    );
   }
 }
 
@@ -50,6 +77,28 @@ class AdaptivePageBody extends StatelessWidget {
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: maxWidth),
         child: Padding(padding: padding, child: child),
+      ),
+    );
+  }
+}
+
+class AdaptiveListItem extends StatelessWidget {
+  final Widget child;
+  final double maxWidth;
+
+  const AdaptiveListItem({
+    super.key,
+    required this.child,
+    this.maxWidth = AppBreakpoints.maxList,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        child: child,
       ),
     );
   }

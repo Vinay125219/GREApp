@@ -5,6 +5,7 @@ import 'package:flutter_math_fork/flutter_math.dart';
 
 import '../../core/app_export.dart';
 import '../../services/supabase_service.dart';
+import '../../widgets/app_navigation.dart';
 
 // ─── Main Admin Content Screen ────────────────────────────────
 
@@ -543,227 +544,294 @@ class _AdminContentScreenState extends State<AdminContentScreen>
     ).then((_) => _loadContent());
   }
 
+  void _onAdminNavDestination(int index) {
+    switch (index) {
+      case 0:
+        Navigator.pushReplacementNamed(context, AppRoutes.adminDashboardScreen);
+        break;
+      case 1:
+        Navigator.pushReplacementNamed(context, AppRoutes.adminStudentsScreen);
+        break;
+      case 2:
+        break;
+      case 3:
+        Navigator.pushReplacementNamed(context, AppRoutes.adminAnalyticsScreen);
+        break;
+      case 4:
+        Navigator.pushReplacementNamed(context, AppRoutes.adminSettingsScreen);
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
       backgroundColor: AppTheme.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Container(
-              color: AppTheme.surface,
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(4, 8, 16, 0),
-                    child: Row(
-                      children: [
-                        IconButton(
-                          icon: const Icon(
-                            Icons.arrow_back_rounded,
-                            color: AppTheme.textPrimary,
-                          ),
-                          onPressed: () => Navigator.pop(context),
+      body: AdaptiveScaffoldBody(
+        navigationRail: AdminNavigationRail(
+          currentIndex: 2,
+          onDestinationSelected: _onAdminNavDestination,
+        ),
+        child: SafeArea(child: _buildContentShell(theme)),
+      ),
+      floatingActionButton: _buildFloatingActions(),
+    );
+  }
+
+  Widget _buildContentShell(ThemeData theme) {
+    return Column(
+      children: [
+        _buildContentHeader(theme),
+        Expanded(
+          child: _isLoading
+              ? const Center(
+                  child: CircularProgressIndicator(color: AppTheme.primary),
+                )
+              : TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildCourseList(theme),
+                    _buildMaterialsTab(theme),
+                    _buildTestList(theme),
+                    _buildBatchList(theme),
+                  ],
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildContentHeader(ThemeData theme) {
+    final compact = context.isCompact;
+    final horizontalPadding = compact ? 12.0 : 24.0;
+
+    return Material(
+      color: AppTheme.surface,
+      elevation: 0,
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: AppBreakpoints.maxContent,
+          ),
+          child: Column(
+            children: [
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  compact ? 4 : 12,
+                  8,
+                  horizontalPadding,
+                  4,
+                ),
+                child: Row(
+                  children: [
+                    if (context.isWide)
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: AppTheme.secondaryContainer,
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        Text(
-                          'Content Management',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const Spacer(),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.refresh_rounded,
-                            color: AppTheme.textSecondary,
-                          ),
-                          onPressed: _loadContent,
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Workflow steps indicator
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                    child: Row(
-                      children: [
-                        _WorkflowStep(
-                          step: 1,
-                          label: 'Courses',
-                          isActive: _tabController.index == 0,
+                        child: const Icon(
+                          Icons.library_books_rounded,
                           color: AppTheme.secondary,
+                          size: 20,
                         ),
-                        _WorkflowConnector(),
-                        _WorkflowStep(
-                          step: 2,
-                          label: 'Materials',
-                          isActive: _tabController.index == 1,
-                          color: AppTheme.warning,
+                      )
+                    else
+                      IconButton(
+                        icon: const Icon(
+                          Icons.arrow_back_rounded,
+                          color: AppTheme.textPrimary,
                         ),
-                        _WorkflowConnector(),
-                        _WorkflowStep(
-                          step: 3,
-                          label: 'Tests',
-                          isActive: _tabController.index == 2,
-                          color: AppTheme.primary,
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    SizedBox(width: context.isWide ? 12 : 0),
+                    Expanded(
+                      child: Text(
+                        'Content Management',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
                         ),
-                        _WorkflowConnector(),
-                        _WorkflowStep(
-                          step: 4,
-                          label: 'Batches',
-                          isActive: _tabController.index == 3,
-                          color: AppTheme.accent,
-                        ),
-                      ],
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.refresh_rounded,
+                        color: AppTheme.textSecondary,
+                      ),
+                      onPressed: _loadContent,
+                      tooltip: 'Refresh content',
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPadding,
+                  4,
+                  horizontalPadding,
+                  6,
+                ),
+                child: Align(
+                  alignment: compact ? Alignment.centerLeft : Alignment.center,
+                  child: _buildWorkflowSteps(),
+                ),
+              ),
+              TabBar(
+                controller: _tabController,
+                labelColor: AppTheme.primary,
+                unselectedLabelColor: AppTheme.textMuted,
+                indicatorColor: AppTheme.primary,
+                isScrollable: compact,
+                tabAlignment: compact ? TabAlignment.start : TabAlignment.fill,
+                labelStyle: TextStyle(
+                  fontFamily: 'IBM Plex Sans',
+                  fontSize: compact ? 12 : 13,
+                  fontWeight: FontWeight.w600,
+                ),
+                onTap: (_) => setState(() {}),
+                tabs: [
+                  _buildContentTab(
+                    icon: Icons.menu_book_rounded,
+                    label: compact ? 'Courses' : 'Courses (${_courses.length})',
                   ),
-                  TabBar(
-                    controller: _tabController,
-                    labelColor: AppTheme.primary,
-                    unselectedLabelColor: AppTheme.textMuted,
-                    indicatorColor: AppTheme.primary,
-                    isScrollable: true,
-                    tabAlignment: TabAlignment.start,
-                    labelStyle: const TextStyle(
-                      fontFamily: 'IBM Plex Sans',
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    onTap: (_) => setState(() {}),
-                    tabs: [
-                      Tab(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.menu_book_rounded, size: 14),
-                            const SizedBox(width: 4),
-                            Text('Courses (${_courses.length})'),
-                          ],
-                        ),
-                      ),
-                      Tab(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.picture_as_pdf_rounded, size: 14),
-                            const SizedBox(width: 4),
-                            const Text('Materials'),
-                          ],
-                        ),
-                      ),
-                      Tab(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.assignment_rounded, size: 14),
-                            const SizedBox(width: 4),
-                            Text('Tests (${_tests.length})'),
-                          ],
-                        ),
-                      ),
-                      Tab(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.groups_rounded, size: 14),
-                            const SizedBox(width: 4),
-                            Text('Batches (${_batches.length})'),
-                          ],
-                        ),
-                      ),
-                    ],
+                  _buildContentTab(
+                    icon: Icons.picture_as_pdf_rounded,
+                    label: compact ? 'Files' : 'Materials',
+                  ),
+                  _buildContentTab(
+                    icon: Icons.assignment_rounded,
+                    label: compact ? 'Tests' : 'Tests (${_tests.length})',
+                  ),
+                  _buildContentTab(
+                    icon: Icons.groups_rounded,
+                    label: compact ? 'Batches' : 'Batches (${_batches.length})',
                   ),
                 ],
               ),
-            ),
-            Expanded(
-              child: _isLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(color: AppTheme.primary),
-                    )
-                  : TabBarView(
-                      controller: _tabController,
-                      children: [
-                        _buildCourseList(theme),
-                        _buildMaterialsTab(theme),
-                        _buildTestList(theme),
-                        _buildBatchList(theme),
-                      ],
-                    ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-      floatingActionButton: AnimatedBuilder(
-        animation: _tabController,
-        builder: (context, _) {
-          final idx = _tabController.index;
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              FloatingActionButton.small(
-                heroTag: 'schedule',
-                onPressed: () =>
-                    Navigator.pushNamed(context, AppRoutes.adminScheduleScreen),
-                backgroundColor: AppTheme.accent,
-                foregroundColor: Colors.white,
-                tooltip: 'Drip Schedule',
-                child: const Icon(Icons.schedule_rounded, size: 20),
-              ),
-              const SizedBox(height: 10),
-              FloatingActionButton.small(
-                heroTag: 'bulk_upload',
-                onPressed: () => Navigator.pushNamed(
-                  context,
-                  AppRoutes.adminBulkUploadScreen,
-                ),
-                backgroundColor: AppTheme.secondary,
-                foregroundColor: Colors.white,
-                tooltip: 'Bulk Upload',
-                child: const Icon(Icons.upload_file_rounded, size: 20),
-              ),
-              const SizedBox(height: 10),
-              FloatingActionButton.extended(
-                heroTag: 'create',
-                onPressed: () {
-                  if (idx == 0) {
-                    _showCreateCourseDialog();
-                  } else if (idx == 1)
-                    _showSelectCourseForMaterials();
-                  else if (idx == 2)
-                    _showCreateTestDialog();
-                  else
-                    _showCreateBatchDialog();
-                },
-                icon: const Icon(Icons.add_rounded),
-                label: Text(
-                  idx == 0
-                      ? 'Course'
-                      : idx == 1
-                      ? 'Materials'
-                      : idx == 2
-                      ? 'Test'
-                      : 'Batch',
-                  style: const TextStyle(
-                    fontFamily: 'IBM Plex Sans',
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                backgroundColor: idx == 0
-                    ? AppTheme.secondary
-                    : idx == 1
-                    ? AppTheme.warning
-                    : idx == 2
-                    ? AppTheme.primary
-                    : AppTheme.accent,
-                foregroundColor: Colors.white,
-              ),
-            ],
-          );
-        },
+    );
+  }
+
+  Widget _buildWorkflowSteps() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _WorkflowStep(
+          step: 1,
+          label: 'Courses',
+          isActive: _tabController.index == 0,
+          color: AppTheme.secondary,
+        ),
+        _WorkflowConnector(),
+        _WorkflowStep(
+          step: 2,
+          label: 'Materials',
+          isActive: _tabController.index == 1,
+          color: AppTheme.warning,
+        ),
+        _WorkflowConnector(),
+        _WorkflowStep(
+          step: 3,
+          label: 'Tests',
+          isActive: _tabController.index == 2,
+          color: AppTheme.primary,
+        ),
+        _WorkflowConnector(),
+        _WorkflowStep(
+          step: 4,
+          label: 'Batches',
+          isActive: _tabController.index == 3,
+          color: AppTheme.accent,
+        ),
+      ],
+    );
+  }
+
+  Tab _buildContentTab({required IconData icon, required String label}) {
+    return Tab(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [Icon(icon, size: 14), const SizedBox(width: 5), Text(label)],
       ),
+    );
+  }
+
+  Widget _buildFloatingActions() {
+    return AnimatedBuilder(
+      animation: _tabController,
+      builder: (context, _) {
+        final idx = _tabController.index;
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            FloatingActionButton.small(
+              heroTag: 'schedule',
+              onPressed: () =>
+                  Navigator.pushNamed(context, AppRoutes.adminScheduleScreen),
+              backgroundColor: AppTheme.accent,
+              foregroundColor: Colors.white,
+              tooltip: 'Drip Schedule',
+              child: const Icon(Icons.schedule_rounded, size: 20),
+            ),
+            const SizedBox(height: 10),
+            FloatingActionButton.small(
+              heroTag: 'bulk_upload',
+              onPressed: () =>
+                  Navigator.pushNamed(context, AppRoutes.adminBulkUploadScreen),
+              backgroundColor: AppTheme.secondary,
+              foregroundColor: Colors.white,
+              tooltip: 'Bulk Upload',
+              child: const Icon(Icons.upload_file_rounded, size: 20),
+            ),
+            const SizedBox(height: 10),
+            FloatingActionButton.extended(
+              heroTag: 'create',
+              onPressed: () {
+                if (idx == 0) {
+                  _showCreateCourseDialog();
+                } else if (idx == 1) {
+                  _showSelectCourseForMaterials();
+                } else if (idx == 2) {
+                  _showCreateTestDialog();
+                } else {
+                  _showCreateBatchDialog();
+                }
+              },
+              icon: const Icon(Icons.add_rounded),
+              label: Text(
+                idx == 0
+                    ? 'Course'
+                    : idx == 1
+                    ? 'Materials'
+                    : idx == 2
+                    ? 'Test'
+                    : 'Batch',
+                style: const TextStyle(
+                  fontFamily: 'IBM Plex Sans',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              backgroundColor: idx == 0
+                  ? AppTheme.secondary
+                  : idx == 1
+                  ? AppTheme.warning
+                  : idx == 2
+                  ? AppTheme.primary
+                  : AppTheme.accent,
+              foregroundColor: Colors.white,
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -1057,35 +1125,36 @@ class _AdminContentScreenState extends State<AdminContentScreen>
       onRefresh: _loadContent,
       color: AppTheme.primary,
       child: ListView.builder(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+        padding: context.adaptivePagePadding(bottom: 112),
         itemCount: _courses.length,
         itemBuilder: (context, index) {
           final course = _courses[index];
           final isPublished = course['is_published'] as bool? ?? false;
-          final batch = course['batches'] as Map<String, dynamic>?;
-          return _CourseCard(
-            course: course,
-            onTap: () => _openCourseMaterials(course),
-            onPublishToggle: () async {
-              await SupabaseService.instance.publishCourse(
-                course['id'] as String,
-                !isPublished,
-              );
-              _loadContent();
-            },
-            onDelete: () async {
-              final confirmed = await _showDeleteConfirm(
-                context,
-                'Delete Course',
-                'Delete "${course['title']}"? All lessons will be removed.',
-              );
-              if (confirmed == true) {
-                await SupabaseService.instance.deleteCourse(
+          return AdaptiveListItem(
+            child: _CourseCard(
+              course: course,
+              onTap: () => _openCourseMaterials(course),
+              onPublishToggle: () async {
+                await SupabaseService.instance.publishCourse(
                   course['id'] as String,
+                  !isPublished,
                 );
                 _loadContent();
-              }
-            },
+              },
+              onDelete: () async {
+                final confirmed = await _showDeleteConfirm(
+                  context,
+                  'Delete Course',
+                  'Delete "${course['title']}"? All lessons will be removed.',
+                );
+                if (confirmed == true) {
+                  await SupabaseService.instance.deleteCourse(
+                    course['id'] as String,
+                  );
+                  _loadContent();
+                }
+              },
+            ),
           );
         },
       ),
@@ -1105,13 +1174,15 @@ class _AdminContentScreenState extends State<AdminContentScreen>
       onRefresh: _loadContent,
       color: AppTheme.primary,
       child: ListView.builder(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+        padding: context.adaptivePagePadding(bottom: 112),
         itemCount: _courses.length,
         itemBuilder: (context, index) {
           final course = _courses[index];
-          return _MaterialsCourseCard(
-            course: course,
-            onTap: () => _openCourseMaterials(course),
+          return AdaptiveListItem(
+            child: _MaterialsCourseCard(
+              course: course,
+              onTap: () => _openCourseMaterials(course),
+            ),
           );
         },
       ),
@@ -1131,33 +1202,36 @@ class _AdminContentScreenState extends State<AdminContentScreen>
       onRefresh: _loadContent,
       color: AppTheme.primary,
       child: ListView.builder(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+        padding: context.adaptivePagePadding(bottom: 112),
         itemCount: _tests.length,
         itemBuilder: (context, index) {
           final test = _tests[index];
-          final status = test['status'] as String? ?? 'draft';
-          return _TestCard(
-            test: test,
-            onTap: () => _openTestQuestions(test),
-            onEdit: () => _showEditTestDialog(test),
-            onStatusChange: (newStatus) async {
-              await SupabaseService.instance.publishTest(
-                test['id'] as String,
-                newStatus,
-              );
-              _loadContent();
-            },
-            onDelete: () async {
-              final confirmed = await _showDeleteConfirm(
-                context,
-                'Delete Test',
-                'Delete "${test['title']}"? All questions will be removed.',
-              );
-              if (confirmed == true) {
-                await SupabaseService.instance.deleteTest(test['id'] as String);
+          return AdaptiveListItem(
+            child: _TestCard(
+              test: test,
+              onTap: () => _openTestQuestions(test),
+              onEdit: () => _showEditTestDialog(test),
+              onStatusChange: (newStatus) async {
+                await SupabaseService.instance.publishTest(
+                  test['id'] as String,
+                  newStatus,
+                );
                 _loadContent();
-              }
-            },
+              },
+              onDelete: () async {
+                final confirmed = await _showDeleteConfirm(
+                  context,
+                  'Delete Test',
+                  'Delete "${test['title']}"? All questions will be removed.',
+                );
+                if (confirmed == true) {
+                  await SupabaseService.instance.deleteTest(
+                    test['id'] as String,
+                  );
+                  _loadContent();
+                }
+              },
+            ),
           );
         },
       ),
@@ -1177,27 +1251,28 @@ class _AdminContentScreenState extends State<AdminContentScreen>
       onRefresh: _loadContent,
       color: AppTheme.primary,
       child: ListView.builder(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+        padding: context.adaptivePagePadding(bottom: 112),
         itemCount: _batches.length,
         itemBuilder: (context, index) {
           final batch = _batches[index];
-          final isActive = batch['is_active'] as bool? ?? true;
-          return _BatchCard(
-            batch: batch,
-            onTap: () => _openBatchDetail(batch),
-            onDelete: () async {
-              final confirmed = await _showDeleteConfirm(
-                context,
-                'Delete Batch',
-                'Delete "${batch['name']}"? Student enrollments will be removed.',
-              );
-              if (confirmed == true) {
-                await SupabaseService.instance.deleteBatch(
-                  batch['id'] as String,
+          return AdaptiveListItem(
+            child: _BatchCard(
+              batch: batch,
+              onTap: () => _openBatchDetail(batch),
+              onDelete: () async {
+                final confirmed = await _showDeleteConfirm(
+                  context,
+                  'Delete Batch',
+                  'Delete "${batch['name']}"? Student enrollments will be removed.',
                 );
-                _loadContent();
-              }
-            },
+                if (confirmed == true) {
+                  await SupabaseService.instance.deleteBatch(
+                    batch['id'] as String,
+                  );
+                  _loadContent();
+                }
+              },
+            ),
           );
         },
       ),
@@ -1310,7 +1385,9 @@ class _WorkflowStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
+    final compact = context.isCompact;
+    return SizedBox(
+      width: compact ? 68 : 94,
       child: Column(
         children: [
           Container(
@@ -1356,7 +1433,7 @@ class _WorkflowConnector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 20,
+      width: context.isCompact ? 22 : 56,
       height: 1,
       color: AppTheme.outlineVariant,
       margin: const EdgeInsets.only(bottom: 14),
@@ -1712,7 +1789,6 @@ class _TestCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final status = test['status'] as String? ?? 'draft';
-    final batch = test['batches'] as Map<String, dynamic>?;
     final durationMins = test['duration_mins'] as int? ?? 60;
     final totalMarks = test['total_marks'] as int? ?? 100;
 

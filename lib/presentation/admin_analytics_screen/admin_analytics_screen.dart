@@ -86,8 +86,9 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
                         ),
                       ),
                     )
-                  : Padding(
-                      padding: const EdgeInsets.all(16),
+                  : AdaptivePageBody(
+                      maxWidth: AppBreakpoints.maxReading,
+                      padding: context.adaptivePagePadding(bottom: 32),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -99,12 +100,12 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
                           ),
                           const SizedBox(height: 12),
                           GridView.count(
-                            crossAxisCount: 2,
+                            crossAxisCount: context.isWide ? 4 : 2,
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             crossAxisSpacing: 12,
                             mainAxisSpacing: 12,
-                            childAspectRatio: 1.5,
+                            childAspectRatio: context.isWide ? 1.35 : 1.5,
                             children: [
                               _MetricCard(
                                 label: 'Total Students',

@@ -1,5 +1,6 @@
 import '../../core/app_export.dart';
 import '../../services/supabase_service.dart';
+import '../../widgets/app_navigation.dart';
 import '../admin_add_student_screen/admin_add_student_screen.dart';
 
 class AdminStudentsScreen extends StatefulWidget {
@@ -118,34 +119,99 @@ class _AdminStudentsScreenState extends State<AdminStudentsScreen> {
     }
   }
 
+  void _onAdminNavDestination(int index) {
+    switch (index) {
+      case 0:
+        Navigator.pushReplacementNamed(context, AppRoutes.adminDashboardScreen);
+        break;
+      case 1:
+        break;
+      case 2:
+        Navigator.pushReplacementNamed(context, AppRoutes.adminContentScreen);
+        break;
+      case 3:
+        Navigator.pushReplacementNamed(context, AppRoutes.adminAnalyticsScreen);
+        break;
+      case 4:
+        Navigator.pushReplacementNamed(context, AppRoutes.adminSettingsScreen);
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
       backgroundColor: AppTheme.background,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openAddStudent,
-        backgroundColor: AppTheme.primary,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.person_add_rounded),
-        label: const Text(
-          'Add Student',
-          style: TextStyle(
-            fontFamily: 'IBM Plex Sans',
-            fontWeight: FontWeight.w600,
-          ),
+      floatingActionButton: _students.isEmpty && _searchQuery.isEmpty
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: _openAddStudent,
+              backgroundColor: AppTheme.primary,
+              foregroundColor: Colors.white,
+              icon: const Icon(Icons.person_add_rounded),
+              label: const Text(
+                'Add Student',
+                style: TextStyle(
+                  fontFamily: 'IBM Plex Sans',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+      body: AdaptiveScaffoldBody(
+        navigationRail: AdminNavigationRail(
+          currentIndex: 1,
+          onDestinationSelected: _onAdminNavDestination,
         ),
+        child: SafeArea(child: _buildStudentsShell(theme)),
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Container(
-              color: AppTheme.surface,
-              padding: const EdgeInsets.fromLTRB(4, 8, 16, 12),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
+    );
+  }
+
+  Widget _buildStudentsShell(ThemeData theme) {
+    return Column(
+      children: [
+        _buildStudentsHeader(theme),
+        Expanded(child: _buildStudentsBody(theme)),
+      ],
+    );
+  }
+
+  Widget _buildStudentsHeader(ThemeData theme) {
+    final compact = context.isCompact;
+    return Material(
+      color: AppTheme.surface,
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: AppBreakpoints.maxContent,
+          ),
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              compact ? 4 : 16,
+              8,
+              compact ? 16 : 24,
+              12,
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    if (context.isWide)
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryContainer,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          Icons.people_rounded,
+                          color: AppTheme.primary,
+                          size: 20,
+                        ),
+                      )
+                    else
                       IconButton(
                         icon: const Icon(
                           Icons.arrow_back_rounded,
@@ -153,127 +219,135 @@ class _AdminStudentsScreenState extends State<AdminStudentsScreen> {
                         ),
                         onPressed: () => Navigator.pop(context),
                       ),
-                      Text(
+                    SizedBox(width: context.isWide ? 12 : 0),
+                    Expanded(
+                      child: Text(
                         'Students',
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.primaryContainer,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          '${_students.length}',
-                          style: const TextStyle(
-                            fontFamily: 'IBM Plex Mono',
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: AppTheme.primary,
-                          ),
-                        ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: TextField(
-                      controller: _searchCtrl,
-                      onChanged: (v) => setState(() => _searchQuery = v),
-                      decoration: InputDecoration(
-                        hintText: 'Search by name, email or username...',
-                        prefixIcon: const Icon(
-                          Icons.search_rounded,
-                          size: 20,
-                          color: AppTheme.textMuted,
-                        ),
-                        suffixIcon: _searchQuery.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear_rounded, size: 18),
-                                onPressed: () {
-                                  _searchCtrl.clear();
-                                  setState(() => _searchQuery = '');
-                                },
-                              )
-                            : null,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        '${_students.length}',
+                        style: const TextStyle(
+                          fontFamily: 'IBM Plex Mono',
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.primary,
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: _isLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(color: AppTheme.primary),
-                    )
-                  : _filtered.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.people_outline_rounded,
-                            size: 64,
-                            color: AppTheme.outlineVariant,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            _searchQuery.isEmpty
-                                ? 'No students enrolled yet'
-                                : 'No students found',
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              color: AppTheme.textSecondary,
-                            ),
-                          ),
-                          if (_searchQuery.isEmpty) ...[
-                            const SizedBox(height: 12),
-                            ElevatedButton.icon(
-                              onPressed: _openAddStudent,
-                              icon: const Icon(
-                                Icons.person_add_rounded,
-                                size: 18,
-                              ),
-                              label: const Text('Add First Student'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppTheme.primary,
-                                foregroundColor: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    )
-                  : RefreshIndicator(
-                      onRefresh: _loadStudents,
-                      color: AppTheme.primary,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-                        itemCount: _filtered.length,
-                        itemBuilder: (context, index) {
-                          final student = _filtered[index];
-                          return _StudentCard(
-                            student: student,
-                            onEdit: () => _openEditStudent(student),
-                            onToggleActive: () => _toggleActive(student),
-                          );
-                        },
-                      ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: _searchCtrl,
+                  onChanged: (v) => setState(() => _searchQuery = v),
+                  decoration: InputDecoration(
+                    hintText: 'Search by name, email or username...',
+                    prefixIcon: const Icon(
+                      Icons.search_rounded,
+                      size: 20,
+                      color: AppTheme.textMuted,
                     ),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear_rounded, size: 18),
+                            onPressed: () {
+                              _searchCtrl.clear();
+                              setState(() => _searchQuery = '');
+                            },
+                          )
+                        : null,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildStudentsBody(ThemeData theme) {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppTheme.primary),
+      );
+    }
+
+    if (_filtered.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.people_outline_rounded,
+                size: 64,
+                color: AppTheme.outlineVariant,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                _searchQuery.isEmpty
+                    ? 'No students enrolled yet'
+                    : 'No students found',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: AppTheme.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              if (_searchQuery.isEmpty) ...[
+                const SizedBox(height: 12),
+                ElevatedButton.icon(
+                  onPressed: _openAddStudent,
+                  icon: const Icon(Icons.person_add_rounded, size: 18),
+                  label: const Text('Add First Student'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primary,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadStudents,
+      color: AppTheme.primary,
+      child: ListView.builder(
+        padding: context.adaptivePagePadding(bottom: 112),
+        itemCount: _filtered.length,
+        itemBuilder: (context, index) {
+          final student = _filtered[index];
+          return AdaptiveListItem(
+            child: _StudentCard(
+              student: student,
+              onEdit: () => _openEditStudent(student),
+              onToggleActive: () => _toggleActive(student),
+            ),
+          );
+        },
       ),
     );
   }
@@ -435,19 +509,15 @@ class _StudentCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          isExpired
-                              ? 'Expired'
-                              : 'Exp ${_fmtDate(expiresAt)}',
+                          isExpired ? 'Expired' : 'Exp ${_fmtDate(expiresAt)}',
                           style: TextStyle(
                             fontFamily: 'IBM Plex Mono',
                             fontSize: 10,
                             fontWeight: FontWeight.w600,
                             color: isExpired
                                 ? AppTheme.error
-                                : expiresAt
-                                              .difference(DateTime.now())
-                                              .inDays <=
-                                          30
+                                : expiresAt.difference(DateTime.now()).inDays <=
+                                      30
                                 ? AppTheme.warning
                                 : AppTheme.textSecondary,
                           ),

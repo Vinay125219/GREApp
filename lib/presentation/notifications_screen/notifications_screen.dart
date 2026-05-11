@@ -414,7 +414,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       onRefresh: _loadNotifications,
                       color: AppTheme.primary,
                       child: ListView.builder(
-                        padding: const EdgeInsets.all(16),
+                        padding: context.adaptivePagePadding(bottom: 32),
                         itemCount: _notifications.length,
                         itemBuilder: (context, index) {
                           final notif = _notifications[index];
@@ -429,147 +429,160 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                               notif.metadata!['doubt_id'] != null;
                           final isTappable =
                               isTestSubmission || isDoubtNotification;
-                          return GestureDetector(
-                            onTap: () => _handleNotificationTap(notif, index),
-                            child: Container(
-                              margin: const EdgeInsets.only(bottom: 10),
-                              padding: const EdgeInsets.all(14),
-                              decoration: BoxDecoration(
-                                color: notif.isRead
-                                    ? AppTheme.surface
-                                    : AppTheme.primaryContainer.withValues(
-                                        alpha: 0.3,
-                                      ),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
+                          return AdaptiveListItem(
+                            child: GestureDetector(
+                              onTap: () => _handleNotificationTap(notif, index),
+                              child: Container(
+                                margin: const EdgeInsets.only(bottom: 10),
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
                                   color: notif.isRead
-                                      ? Colors.transparent
-                                      : AppTheme.primary.withValues(alpha: 0.2),
+                                      ? AppTheme.surface
+                                      : AppTheme.primaryContainer.withValues(
+                                          alpha: 0.3,
+                                        ),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: notif.isRead
+                                        ? Colors.transparent
+                                        : AppTheme.primary.withValues(
+                                            alpha: 0.2,
+                                          ),
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.04,
+                                      ),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
                                 ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.04),
-                                    blurRadius: 6,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    width: 38,
-                                    height: 38,
-                                    decoration: BoxDecoration(
-                                      color: typeColor.withValues(alpha: 0.12),
-                                      shape: BoxShape.circle,
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      width: 38,
+                                      height: 38,
+                                      decoration: BoxDecoration(
+                                        color: typeColor.withValues(
+                                          alpha: 0.12,
+                                        ),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        _iconForType(notif.type),
+                                        size: 18,
+                                        color: typeColor,
+                                      ),
                                     ),
-                                    child: Icon(
-                                      _iconForType(notif.type),
-                                      size: 18,
-                                      color: typeColor,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                notif.title,
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  notif.title,
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .labelLarge
+                                                      ?.copyWith(
+                                                        fontWeight: notif.isRead
+                                                            ? FontWeight.w500
+                                                            : FontWeight.w700,
+                                                      ),
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                              if (!notif.isRead)
+                                                Container(
+                                                  width: 8,
+                                                  height: 8,
+                                                  decoration:
+                                                      const BoxDecoration(
+                                                        color: AppTheme.primary,
+                                                        shape: BoxShape.circle,
+                                                      ),
+                                                ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            notif.body,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall
+                                                ?.copyWith(
+                                                  color: AppTheme.textSecondary,
+                                                ),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Row(
+                                            children: [
+                                              Text(
+                                                _timeAgo(notif.createdAt),
                                                 style: Theme.of(context)
                                                     .textTheme
-                                                    .labelLarge
+                                                    .labelSmall
                                                     ?.copyWith(
-                                                      fontWeight: notif.isRead
-                                                          ? FontWeight.w500
-                                                          : FontWeight.w700,
+                                                      color: AppTheme.textMuted,
                                                     ),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
                                               ),
-                                            ),
-                                            if (!notif.isRead)
-                                              Container(
-                                                width: 8,
-                                                height: 8,
-                                                decoration: const BoxDecoration(
-                                                  color: AppTheme.primary,
-                                                  shape: BoxShape.circle,
-                                                ),
-                                              ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          notif.body,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodySmall
-                                              ?.copyWith(
-                                                color: AppTheme.textSecondary,
-                                              ),
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        const SizedBox(height: 6),
-                                        Row(
-                                          children: [
-                                            Text(
-                                              _timeAgo(notif.createdAt),
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .labelSmall
-                                                  ?.copyWith(
-                                                    color: AppTheme.textMuted,
-                                                  ),
-                                            ),
-                                            if (isTappable) ...[
-                                              const SizedBox(width: 8),
-                                              Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 6,
-                                                      vertical: 2,
+                                              if (isTappable) ...[
+                                                const SizedBox(width: 8),
+                                                Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 6,
+                                                        vertical: 2,
+                                                      ),
+                                                  decoration: BoxDecoration(
+                                                    color: typeColor.withValues(
+                                                      alpha: 0.1,
                                                     ),
-                                                decoration: BoxDecoration(
-                                                  color: typeColor.withValues(
-                                                    alpha: 0.1,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          4,
+                                                        ),
                                                   ),
-                                                  borderRadius:
-                                                      BorderRadius.circular(4),
-                                                ),
-                                                child: Text(
-                                                  isTestSubmission
-                                                      ? 'Tap to review'
-                                                      : 'Tap to view',
-                                                  style: TextStyle(
-                                                    fontSize: 10,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: typeColor,
+                                                  child: Text(
+                                                    isTestSubmission
+                                                        ? 'Tap to review'
+                                                        : 'Tap to view',
+                                                    style: TextStyle(
+                                                      fontSize: 10,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color: typeColor,
+                                                    ),
                                                   ),
                                                 ),
-                                              ),
+                                              ],
                                             ],
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  if (isTappable)
-                                    const Padding(
-                                      padding: EdgeInsets.only(left: 8),
-                                      child: Icon(
-                                        Icons.chevron_right_rounded,
-                                        size: 18,
-                                        color: AppTheme.textMuted,
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                ],
+                                    if (isTappable)
+                                      const Padding(
+                                        padding: EdgeInsets.only(left: 8),
+                                        child: Icon(
+                                          Icons.chevron_right_rounded,
+                                          size: 18,
+                                          color: AppTheme.textMuted,
+                                        ),
+                                      ),
+                                  ],
+                                ),
                               ),
                             ),
                           );

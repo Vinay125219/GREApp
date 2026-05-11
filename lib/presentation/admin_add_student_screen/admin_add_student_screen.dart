@@ -1,4 +1,3 @@
-
 import '../../core/app_export.dart';
 import '../../services/supabase_service.dart';
 
@@ -203,280 +202,287 @@ class _AdminAddStudentScreenState extends State<AdminAddStudentScreen> {
             ),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Account Info Section
-                      _sectionLabel(
-                        'Account Information',
-                        Icons.person_outline_rounded,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildField(
-                        controller: _fullNameCtrl,
-                        label: 'Full Name',
-                        hint: 'e.g. Rahul Sharma',
-                        icon: Icons.badge_outlined,
-                        validator: (v) => (v == null || v.trim().isEmpty)
-                            ? 'Full name is required'
-                            : null,
-                      ),
-                      const SizedBox(height: 14),
-                      _buildField(
-                        controller: _emailCtrl,
-                        label: 'Email Address',
-                        hint: 'student@example.com',
-                        icon: Icons.email_outlined,
-                        keyboardType: TextInputType.emailAddress,
-                        readOnly: _isEditing,
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty) {
-                            return 'Email is required';
-                          }
-                          if (!RegExp(
-                            r'^[\w.-]+@[\w.-]+\.\w+$',
-                          ).hasMatch(v.trim())) {
-                            return 'Enter a valid email';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 14),
-                      _buildField(
-                        controller: _usernameCtrl,
-                        label: 'Username (optional)',
-                        hint: 'e.g. rahul2024',
-                        icon: Icons.alternate_email_rounded,
-                        validator: (v) {
-                          if (v != null && v.trim().isNotEmpty) {
-                            if (v.trim().length < 3) {
-                              return 'Username must be at least 3 characters';
-                            }
-                            if (!RegExp(
-                              r'^[a-zA-Z0-9_]+$',
-                            ).hasMatch(v.trim())) {
-                              return 'Only letters, numbers, and underscores allowed';
-                            }
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Password Section (only for new students)
-                      if (!_isEditing) ...[
+                child: AdaptivePageBody(
+                  maxWidth: 760,
+                  padding: context.adaptivePagePadding(bottom: 32),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Account Info Section
                         _sectionLabel(
-                          'Set Password',
-                          Icons.lock_outline_rounded,
+                          'Account Information',
+                          Icons.person_outline_rounded,
                         ),
                         const SizedBox(height: 12),
-                        _buildPasswordField(
-                          controller: _passwordCtrl,
-                          label: 'Password',
-                          hint: 'Min. 8 characters',
-                          obscure: _obscurePassword,
-                          onToggle: () => setState(
-                            () => _obscurePassword = !_obscurePassword,
-                          ),
+                        _buildField(
+                          controller: _fullNameCtrl,
+                          label: 'Full Name',
+                          hint: 'e.g. Rahul Sharma',
+                          icon: Icons.badge_outlined,
+                          validator: (v) => (v == null || v.trim().isEmpty)
+                              ? 'Full name is required'
+                              : null,
+                        ),
+                        const SizedBox(height: 14),
+                        _buildField(
+                          controller: _emailCtrl,
+                          label: 'Email Address',
+                          hint: 'student@example.com',
+                          icon: Icons.email_outlined,
+                          keyboardType: TextInputType.emailAddress,
+                          readOnly: _isEditing,
                           validator: (v) {
-                            if (v == null || v.isEmpty) {
-                              return 'Password is required';
+                            if (v == null || v.trim().isEmpty) {
+                              return 'Email is required';
                             }
-                            if (v.length < 8) {
-                              return 'Password must be at least 8 characters';
+                            if (!RegExp(
+                              r'^[\w.-]+@[\w.-]+\.\w+$',
+                            ).hasMatch(v.trim())) {
+                              return 'Enter a valid email';
                             }
                             return null;
                           },
                         ),
                         const SizedBox(height: 14),
-                        _buildPasswordField(
-                          controller: _confirmPasswordCtrl,
-                          label: 'Confirm Password',
-                          hint: 'Re-enter password',
-                          obscure: _obscureConfirm,
-                          onToggle: () => setState(
-                            () => _obscureConfirm = !_obscureConfirm,
-                          ),
+                        _buildField(
+                          controller: _usernameCtrl,
+                          label: 'Username (optional)',
+                          hint: 'e.g. rahul2024',
+                          icon: Icons.alternate_email_rounded,
                           validator: (v) {
-                            if (v != _passwordCtrl.text) {
-                              return 'Passwords do not match';
+                            if (v != null && v.trim().isNotEmpty) {
+                              if (v.trim().length < 3) {
+                                return 'Username must be at least 3 characters';
+                              }
+                              if (!RegExp(
+                                r'^[a-zA-Z0-9_]+$',
+                              ).hasMatch(v.trim())) {
+                                return 'Only letters, numbers, and underscores allowed';
+                              }
                             }
                             return null;
                           },
                         ),
                         const SizedBox(height: 24),
-                      ],
 
-                      // Expiry Section
-                      _sectionLabel('Account Expiry', Icons.schedule_rounded),
-                      const SizedBox(height: 12),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: AppTheme.surface,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppTheme.outline),
-                        ),
-                        child: Column(
-                          children: [
-                            // No expiry toggle
-                            SwitchListTile(
-                              value: _noExpiry,
-                              onChanged: (v) => setState(() {
-                                _noExpiry = v;
-                                if (v) _expiryDate = null;
-                              }),
-                              title: const Text(
-                                'No Expiry',
-                                style: TextStyle(
-                                  fontFamily: 'IBM Plex Sans',
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppTheme.textPrimary,
-                                ),
-                              ),
-                              subtitle: const Text(
-                                'Account remains active indefinitely',
-                                style: TextStyle(
-                                  fontFamily: 'IBM Plex Sans',
-                                  fontSize: 12,
-                                  color: AppTheme.textMuted,
-                                ),
-                              ),
-                              activeThumbColor: AppTheme.primary,
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 4,
-                              ),
+                        // Password Section (only for new students)
+                        if (!_isEditing) ...[
+                          _sectionLabel(
+                            'Set Password',
+                            Icons.lock_outline_rounded,
+                          ),
+                          const SizedBox(height: 12),
+                          _buildPasswordField(
+                            controller: _passwordCtrl,
+                            label: 'Password',
+                            hint: 'Min. 8 characters',
+                            obscure: _obscurePassword,
+                            onToggle: () => setState(
+                              () => _obscurePassword = !_obscurePassword,
                             ),
-                            if (!_noExpiry) ...[
-                              const Divider(
-                                height: 1,
-                                color: AppTheme.outlineVariant,
-                              ),
-                              InkWell(
-                                onTap: _pickExpiryDate,
-                                borderRadius: const BorderRadius.vertical(
-                                  bottom: Radius.circular(12),
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 14,
+                            validator: (v) {
+                              if (v == null || v.isEmpty) {
+                                return 'Password is required';
+                              }
+                              if (v.length < 8) {
+                                return 'Password must be at least 8 characters';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 14),
+                          _buildPasswordField(
+                            controller: _confirmPasswordCtrl,
+                            label: 'Confirm Password',
+                            hint: 'Re-enter password',
+                            obscure: _obscureConfirm,
+                            onToggle: () => setState(
+                              () => _obscureConfirm = !_obscureConfirm,
+                            ),
+                            validator: (v) {
+                              if (v != _passwordCtrl.text) {
+                                return 'Passwords do not match';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 24),
+                        ],
+
+                        // Expiry Section
+                        _sectionLabel('Account Expiry', Icons.schedule_rounded),
+                        const SizedBox(height: 12),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: AppTheme.surface,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppTheme.outline),
+                          ),
+                          child: Column(
+                            children: [
+                              // No expiry toggle
+                              SwitchListTile(
+                                value: _noExpiry,
+                                onChanged: (v) => setState(() {
+                                  _noExpiry = v;
+                                  if (v) _expiryDate = null;
+                                }),
+                                title: const Text(
+                                  'No Expiry',
+                                  style: TextStyle(
+                                    fontFamily: 'IBM Plex Sans',
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.textPrimary,
                                   ),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color: _expiryDate != null
-                                              ? AppTheme.primaryContainer
-                                              : AppTheme.surfaceVariant,
-                                          borderRadius: BorderRadius.circular(
-                                            8,
+                                ),
+                                subtitle: const Text(
+                                  'Account remains active indefinitely',
+                                  style: TextStyle(
+                                    fontFamily: 'IBM Plex Sans',
+                                    fontSize: 12,
+                                    color: AppTheme.textMuted,
+                                  ),
+                                ),
+                                activeThumbColor: AppTheme.primary,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 4,
+                                ),
+                              ),
+                              if (!_noExpiry) ...[
+                                const Divider(
+                                  height: 1,
+                                  color: AppTheme.outlineVariant,
+                                ),
+                                InkWell(
+                                  onTap: _pickExpiryDate,
+                                  borderRadius: const BorderRadius.vertical(
+                                    bottom: Radius.circular(12),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 14,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: _expiryDate != null
+                                                ? AppTheme.primaryContainer
+                                                : AppTheme.surfaceVariant,
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                          ),
+                                          child: Icon(
+                                            Icons.calendar_today_rounded,
+                                            size: 18,
+                                            color: _expiryDate != null
+                                                ? AppTheme.primary
+                                                : AppTheme.textMuted,
                                           ),
                                         ),
-                                        child: Icon(
-                                          Icons.calendar_today_rounded,
-                                          size: 18,
-                                          color: _expiryDate != null
-                                              ? AppTheme.primary
-                                              : AppTheme.textMuted,
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                'Expiry Date',
+                                                style: theme
+                                                    .textTheme
+                                                    .labelMedium
+                                                    ?.copyWith(
+                                                      color: AppTheme
+                                                          .textSecondary,
+                                                    ),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                _expiryDate != null
+                                                    ? _formatDate(_expiryDate!)
+                                                    : 'Tap to select date',
+                                                style: theme
+                                                    .textTheme
+                                                    .bodyMedium
+                                                    ?.copyWith(
+                                                      fontWeight:
+                                                          _expiryDate != null
+                                                          ? FontWeight.w600
+                                                          : FontWeight.w400,
+                                                      color: _expiryDate != null
+                                                          ? AppTheme.textPrimary
+                                                          : AppTheme.textMuted,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              'Expiry Date',
-                                              style: theme.textTheme.labelMedium
-                                                  ?.copyWith(
-                                                    color:
-                                                        AppTheme.textSecondary,
-                                                  ),
-                                            ),
-                                            const SizedBox(height: 2),
-                                            Text(
-                                              _expiryDate != null
-                                                  ? _formatDate(_expiryDate!)
-                                                  : 'Tap to select date',
-                                              style: theme.textTheme.bodyMedium
-                                                  ?.copyWith(
-                                                    fontWeight:
-                                                        _expiryDate != null
-                                                        ? FontWeight.w600
-                                                        : FontWeight.w400,
-                                                    color: _expiryDate != null
-                                                        ? AppTheme.textPrimary
-                                                        : AppTheme.textMuted,
-                                                  ),
-                                            ),
-                                          ],
+                                        Icon(
+                                          Icons.chevron_right_rounded,
+                                          color: AppTheme.textMuted,
+                                          size: 20,
                                         ),
-                                      ),
-                                      Icon(
-                                        Icons.chevron_right_rounded,
-                                        color: AppTheme.textMuted,
-                                        size: 20,
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 ),
-                              ),
+                              ],
                             ],
-                          ],
-                        ),
-                      ),
-
-                      // Expiry info chip
-                      if (!_noExpiry && _expiryDate != null) ...[
-                        const SizedBox(height: 10),
-                        _expiryInfoChip(),
-                      ],
-
-                      const SizedBox(height: 32),
-
-                      // Submit button
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _submit,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.primary,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
                           ),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : Text(
-                                  _isEditing
-                                      ? 'Save Changes'
-                                      : 'Create Account',
-                                  style: const TextStyle(
-                                    fontFamily: 'IBM Plex Sans',
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
                         ),
-                      ),
-                      const SizedBox(height: 20),
-                    ],
+
+                        // Expiry info chip
+                        if (!_noExpiry && _expiryDate != null) ...[
+                          const SizedBox(height: 10),
+                          _expiryInfoChip(),
+                        ],
+
+                        const SizedBox(height: 32),
+
+                        // Submit button
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _isLoading ? null : _submit,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.primary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: _isLoading
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : Text(
+                                    _isEditing
+                                        ? 'Save Changes'
+                                        : 'Create Account',
+                                    style: const TextStyle(
+                                      fontFamily: 'IBM Plex Sans',
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
                   ),
                 ),
               ),

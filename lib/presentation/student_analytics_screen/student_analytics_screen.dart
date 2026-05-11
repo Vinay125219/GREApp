@@ -302,7 +302,7 @@ class _StudentAnalyticsScreenState extends State<StudentAnalyticsScreen>
       color: AppTheme.primary,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
+        padding: context.adaptivePagePadding(bottom: 32),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -598,7 +598,7 @@ class _StudentAnalyticsScreenState extends State<StudentAnalyticsScreen>
       color: AppTheme.primary,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
+        padding: context.adaptivePagePadding(bottom: 32),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

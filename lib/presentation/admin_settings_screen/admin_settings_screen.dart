@@ -108,8 +108,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         ),
                       ),
                     )
-                  : Padding(
-                      padding: const EdgeInsets.all(16),
+                  : AdaptivePageBody(
+                      maxWidth: AppBreakpoints.maxReading,
+                      padding: context.adaptivePagePadding(bottom: 32),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [

@@ -331,133 +331,135 @@ class _StudentDoubtsScreenState extends State<StudentDoubtsScreen>
       onRefresh: _loadDoubts,
       color: AppTheme.primary,
       child: ListView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: context.adaptivePagePadding(bottom: 112),
         itemCount: doubts.length,
         itemBuilder: (context, index) {
           final doubt = doubts[index];
           final isAnswered = doubt.status == 'answered';
           final statusColor = isAnswered ? AppTheme.success : AppTheme.warning;
 
-          return GestureDetector(
-            onTap: () => _openDoubtThread(doubt),
-            child: Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              decoration: BoxDecoration(
-                color: AppTheme.surface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: statusColor.withValues(alpha: 0.2)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            doubt.title,
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: statusColor.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            isAnswered ? 'Answered' : 'Open',
-                            style: TextStyle(
-                              fontFamily: 'IBM Plex Sans',
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: statusColor,
-                            ),
-                          ),
-                        ),
-                      ],
+          return AdaptiveListItem(
+            child: GestureDetector(
+              onTap: () => _openDoubtThread(doubt),
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: AppTheme.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: statusColor.withValues(alpha: 0.2)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 0, 14, 0),
-                    child: Text(
-                      doubt.body,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: AppTheme.textSecondary,
-                      ),
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  if (isAnswered && doubt.answerText != null) ...[
-                    const Divider(height: 16, indent: 14, endIndent: 14),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+                      padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
                       child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(
-                            Icons.check_circle_rounded,
-                            size: 16,
-                            color: AppTheme.success,
-                          ),
-                          const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              doubt.answerText!,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: AppTheme.textPrimary,
+                              doubt.title,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
                               ),
-                              maxLines: 4,
+                              maxLines: 2,
                               overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: statusColor.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              isAnswered ? 'Answered' : 'Open',
+                              style: TextStyle(
+                                fontFamily: 'IBM Plex Sans',
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: statusColor,
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ] else
-                    const SizedBox(height: 12),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
-                    child: Row(
-                      children: [
-                        Text(
-                          _timeAgo(doubt.createdAt),
-                          style: theme.textTheme.labelSmall,
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 0, 14, 0),
+                      child: Text(
+                        doubt.body,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: AppTheme.textSecondary,
                         ),
-                        const Spacer(),
-                        const Icon(
-                          Icons.chevron_right_rounded,
-                          size: 16,
-                          color: AppTheme.textMuted,
-                        ),
-                        Text(
-                          'View Thread',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: AppTheme.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
-                ],
+                    if (isAnswered && doubt.answerText != null) ...[
+                      const Divider(height: 16, indent: 14, endIndent: 14),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(
+                              Icons.check_circle_rounded,
+                              size: 16,
+                              color: AppTheme.success,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                doubt.answerText!,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: AppTheme.textPrimary,
+                                ),
+                                maxLines: 4,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ] else
+                      const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+                      child: Row(
+                        children: [
+                          Text(
+                            _timeAgo(doubt.createdAt),
+                            style: theme.textTheme.labelSmall,
+                          ),
+                          const Spacer(),
+                          const Icon(
+                            Icons.chevron_right_rounded,
+                            size: 16,
+                            color: AppTheme.textMuted,
+                          ),
+                          Text(
+                            'View Thread',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: AppTheme.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           );

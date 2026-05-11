@@ -13,6 +13,8 @@
 .swiftpm/
 migrate_working_dir/
 .vercel/
+.env
+.env.*
 
 # IntelliJ related
 *.iml

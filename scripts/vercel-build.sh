@@ -17,7 +17,13 @@ fi
 "$FLUTTER_BIN" config --enable-web
 "$FLUTTER_BIN" pub get
 
-if [ -n "${SUPABASE_URL:-}" ] && [ -n "${SUPABASE_ANON_KEY:-}" ]; then
+if [ "${VERCEL:-}" = "1" ]; then
+  if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_ANON_KEY:-}" ]; then
+    echo "ERROR: Vercel production build requires non-empty SUPABASE_URL and SUPABASE_ANON_KEY environment variables."
+    echo "Set them in Vercel Project Settings -> Environment Variables, then redeploy."
+    exit 1
+  fi
+
   "$FLUTTER_BIN" build web --release \
     --dart-define="SUPABASE_URL=$SUPABASE_URL" \
     --dart-define="SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY" \

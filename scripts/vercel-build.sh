@@ -16,4 +16,12 @@ fi
 "$FLUTTER_BIN" --version
 "$FLUTTER_BIN" config --enable-web
 "$FLUTTER_BIN" pub get
-"$FLUTTER_BIN" build web --release --dart-define-from-file=env.json --no-wasm-dry-run
+
+if [ -n "${SUPABASE_URL:-}" ] && [ -n "${SUPABASE_ANON_KEY:-}" ]; then
+  "$FLUTTER_BIN" build web --release \
+    --dart-define="SUPABASE_URL=$SUPABASE_URL" \
+    --dart-define="SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY" \
+    --no-wasm-dry-run
+else
+  "$FLUTTER_BIN" build web --release --dart-define-from-file=env.json --no-wasm-dry-run
+fi

@@ -148,6 +148,15 @@ This repo includes `vercel.json` and `scripts/vercel-build.sh`.
 Vercel will build the Flutter web bundle from the Git repository and serve the
 Flutter app as a single-page application.
 
+For production login to work, add these environment variables in Vercel before
+deploying:
+
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+
+The Vercel build script prefers those production variables when both are set,
+and only falls back to local `env.json` when they are absent.
+
 ## 🙏 Acknowledgments
 - Built with [Rocket.new](https://rocket.new)
 - Powered by [Flutter](https://flutter.dev) & [Dart](https://dart.dev)
